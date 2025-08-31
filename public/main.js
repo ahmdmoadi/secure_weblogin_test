@@ -1,31 +1,32 @@
-// Fetch SPKI public key PEM and a one-time nonce
-const [pem, { nonce, keyId }] = await Promise.all([
-  fetch('/auth/key').then(r => r.text()),
-  fetch('/auth/nonce').then(r => r.json())
-]);
+/**@type {HTMLInputElement} */
+let r_usr = document.querySelector("#username");
+/**@type {HTMLInputElement} */
+let r_pass = document.querySelector("#password");
+/**@type {HTMLButtonElement} */
+let r_btn = document.querySelector("#register")
+/**@type {HTMLInputElement} */
+let l_use = document.querySelector("#username_l");
+/**@type {HTMLInputElement} */
+let l_pass = document.querySelector("#password_l");
+/**@type {HTMLButtonElement} */
+let l_btn = document.querySelector("#login");
 
-const spki = pemToArrayBuffer(pem);
-const pubKey = await crypto.subtle.importKey(
-  'spki', spki, { name: 'RSA-OAEP', hash: 'SHA-256' }, false, ['encrypt']
-);
-
-const payload = new TextEncoder().encode(JSON.stringify({
-  username, password, nonce, ts: Date.now()
-}));
-const ciphertext = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, pubKey, payload);
-const b64 = btoa(String.fromCharCode(...new Uint8Array(ciphertext)));
-
-await fetch('/login-encrypted', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ keyId, ct: b64 })
+let forms = document.querySelectorAll("form").forEach(form=>{
+    form.addEventListener("submit", e=>{
+        e.preventDefault();
+    });
 });
 
-// helper: turn PEM -> ArrayBuffer
-function pemToArrayBuffer(pem) {
-  const b64 = pem.replace(/-----(BEGIN|END) PUBLIC KEY-----/g, '').replace(/\s+/g, '');
-  const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes.buffer;
-}
+r_btn.addEventListener("click", async e=>{
+    let result = await (await fetch("http://localhost/getkey", {
+        method: "POST",
+        headers: {
+            "Content-Type":"application/json"
+        },
+        body: JSON.stringify({
+            "username":r_usr.value,
+            "password":r_pass.value
+        })
+    })).json();
+    console.log(`received msg:\n[${result.msg}]\nLogging in with username [${result.username}] and password [${result.password}]`);
+})
