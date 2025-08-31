@@ -1,0 +1,22 @@
+{
+  "name": "secure_weblogin_test",
+  "version": "1.0.0",
+  "description": "Testing an implementation of a secure login in a webpage.",
+  "main": "app.js",
+  "scripts": {
+    "test": "npm test dev",
+    "dev": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "secure_weblogin_test"
+  },
+  "keywords": [
+    "login",
+    "js",
+    "crypto",
+    "nodejs"
+  ],
+  "author": "@ahmdmoadi",
+  "license": "SEE LICENSE IN LICENSE"
+}
