@@ -26,17 +26,17 @@ app.post("/register", async (req, res) => {
         database: 'swt',
         password: "789"+"456Ah@indome@"
     });
+    
+    let doExists = await c.execute(`SELECT EXISTS(SELECT * FROM users WHERE username = "${username}");`);
+    console.log("Exists?",Object.entries(doExists[0][0])[0][1])
+   
+    console.error("Row doesn't exist. Creating..");
     try {
-        let doExists = await c.execute(`SELECT EXISTS(SELECT * FROM users WHERE username = ${username});`);
-        console.log("Exists?",doExists)
-    } catch (err) {
-        console.error("Row doesn't exist. Creating..");
-        try {
-            await c.execute("INSERT INTO users VALUES (?,?,?);",[username,salt,hashedPass]);
-        } catch (crerr) {
-            console.error("Couldn't create user:", username, "Reason:", crerr);
-        }
+        await c.execute("INSERT INTO users VALUES (?,?,?);",[username,salt,hashedPass]);
+    } catch (crerr) {
+        console.error("Couldn't create user:", username, "Reason:", crerr);
     }
+    
     res.send({
     msg: `Registering with username [${username}] and obfs. pass [${hashedPass}]`,
     username,

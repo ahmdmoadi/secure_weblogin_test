@@ -1,0 +1,37 @@
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: #000;
+    color: lightgray;
+    font-family: SF UI Display;
+    padding: 25px;
+}
+
+input {
+    background: #000;
+    border: 1px solid lightgray;
+    border-radius: 5px;
+    padding: 10px;
+    color: lightgray;
+}
+
+button {
+    padding: 10px;
+    background: #000;
+    border: 1px solid lightgray;
+    color: lightgray;
+    border-radius: 8px;
+}
+
+#login-form, #register-form {
+    background: rgb(63, 63, 63);
+    display: inline-block;
+    padding: 25px;
+    border-radius: 15px;
+    margin-right: 20px;
+}
