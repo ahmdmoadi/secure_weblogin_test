@@ -27,22 +27,30 @@ app.post("/register", async (req, res) => {
         password: "789"+"456Ah@indome@"
     });
     
-    let doExists = await c.execute(`SELECT EXISTS(SELECT * FROM users WHERE username = "${username}");`);
-    console.log("Exists?",Object.entries(doExists[0][0])[0][1])
+    let [rows] = await c.execute(`SELECT EXISTS(SELECT 1 FROM users WHERE username = ?) AS userExists;`,[username]);
+
+    let doExists = rows[0].userExists;
+
+    console.log("Exists?",doExists);
    
-    console.error("Row doesn't exist. Creating..");
-    try {
-        await c.execute("INSERT INTO users VALUES (?,?,?);",[username,salt,hashedPass]);
-    } catch (crerr) {
-        console.error("Couldn't create user:", username, "Reason:", crerr);
+    if(!doExists) {
+        console.log("User doesn't exist. Creating..");
+        try {
+            await c.execute("INSERT INTO users VALUES (?,?,?);",[username,salt,hashedPass]);
+            res.send({
+            msg: `Registering with username [${username}] and obfs. pass [${hashedPass}]`,
+            username,
+            password
+        });
+        console.log({...req.body, hashedPass});
+        } catch (crerr) {
+            console.error("Couldn't create user:", username, "Reason:", crerr);
+        }
+    } else {
+        res.status(400).send({
+            msg: "User Exists!"
+        });
     }
-    
-    res.send({
-    msg: `Registering with username [${username}] and obfs. pass [${hashedPass}]`,
-    username,
-    password
-   });
-   console.log({...req.body, hashedPass});
    c.end();
 });
 
