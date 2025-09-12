@@ -1,15 +1,19 @@
 /**@type {HTMLInputElement} */
-let r_usr = document.querySelector("#username");
+let registerUser = document.querySelector("#username");
 /**@type {HTMLInputElement} */
-let r_pass = document.querySelector("#password");
+let registerPass = document.querySelector("#password");
 /**@type {HTMLButtonElement} */
-let r_btn = document.querySelector("#register")
+let registerBtn = document.querySelector("#register")
 /**@type {HTMLInputElement} */
-let l_usr = document.querySelector("#username_l");
+let loginUser = document.querySelector("#username_l");
 /**@type {HTMLInputElement} */
-let l_pass = document.querySelector("#password_l");
+let loginPass = document.querySelector("#password_l");
 /**@type {HTMLButtonElement} */
-let l_btn = document.querySelector("#login");
+let loginBtn = document.querySelector("#login");
+/**@type {HTMLFormElement} */
+let registerForm = document.getElementById("register-form");
+/**@type {HTMLFormElement} */
+let loginForm = document.getElementById("login-form");
 
 (async ()=>{
     async function rng(len=10) {
@@ -20,33 +24,19 @@ let l_btn = document.querySelector("#login");
     // r_pass.value = await rng(16);
 
     // r_btn.dispatchEvent(new MouseEvent("click"));
-})()
+})();
 
-let forms = document.querySelectorAll("form").forEach(form=>{
-    form.addEventListener("submit", e=>{
-        e.preventDefault();
-    });
-});
-
-// let counter = 0;
-
-r_btn.addEventListener("click", async e=>{
-    // if(counter===0) {
-    //     alert("Wrong password");
-    //     counter++;
-    //     return;
-    // }
-    // let salt = await (await fetch("//localhost/salter", {
-    //     method: "POST"
-    // })).text();
+// TODO: migrate to using formData instead
+// of this crap
+registerBtn.addEventListener("click", async e=>{
     let res = await fetch("http://localhost/register", {
         method: "POST",
         headers: {
             "Content-Type":"application/json"
         },
         body: JSON.stringify({
-            "username":r_usr.value,
-            "password":r_pass.value
+            "username":registerUser.value,
+            "password":registerPass.value
         })
     });
     let result = await res.json();
@@ -70,4 +60,11 @@ r_btn.addEventListener("click", async e=>{
         
     
     
+});
+
+// login form handeler
+
+loginForm.addEventListener("submit", e=>{
+    e.preventDefault();
+    console.log(new FormData(e.target));
 });
