@@ -4,7 +4,6 @@ const MySQLStore = require("express-mysql-session")(session);
 let app = express();
 let path = require("path");
 const {pool, findUser, insertUser, auth} = require("./db");
-const { sign } = require("crypto");
 require('./envr');
 const PORT = process.env.SERVER_PORT;
 
