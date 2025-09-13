@@ -1,57 +1,104 @@
 let express = require("express");
-const mysql = require("mysql2/promise");
-const argon2 = require("argon2");
+let session = require("express-session");
+const MySQLStore = require("express-mysql-session")(session);
 let app = express();
 let path = require("path");
-let crypto = require("crypto");
-const fs = require('fs');
-const { constants } = crypto;
-const bodyParser = require("body-parser");
+const {pool, findUser, insertUser, auth} = require("./db");
+const { sign } = require("crypto");
+require('./envr');
+const PORT = process.env.SERVER_PORT;
 
 app.use(require("cors")({origin: "*"}))
 //id_ed25519
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-const privateKeyPem = fs.readFileSync('./pvt/swt'); // keep safe!
+const sessionStore = new MySQLStore({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
+});
+
+app.use(session({
+  key: 'sid',
+  secret: process.env.SESSION_SECRET,
+  store: sessionStore,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: false, // true in production w/ HTTPS
+    maxAge: 1000 * 60 * 60 // 1 hour
+  }
+}));
 
 app.post("/register", async (req, res) => {
+    console.log(req.body);
     let {username, password} = req.body;
-    let salt = salter();
-    let hashedPass = await argon2.hash(salt+password, {type:argon2.argon2id});
-    let c = await mysql.createConnection({
-        host: 'localhost',
-        user: 'root',
-        database: 'swt',
-        password: "789"+"456Ah@indome@"
-    });
     
-    let [rows] = await c.execute(`SELECT EXISTS(SELECT 1 FROM users WHERE username = ?) AS userExists;`,[username]);
+    let userFound = await findUser(username);
 
-    let doExists = rows[0].userExists;
-
-    console.log("Exists?",doExists);
-   
-    if(!doExists) {
-        console.log("User doesn't exist. Creating..");
-        try {
-            await c.execute("INSERT INTO users VALUES (?,?,?);",[username,salt,hashedPass]);
-            res.send({
-            msg: `Registering with username [${username}] and obfs. pass [${hashedPass}]`,
-            username,
-            password
+    if(!userFound) {
+        insertUser(username, password);
+        res.status(200).send({
+            msg: "User Created Successfully.",
+            _cecode: "PIZZA"
         });
-        console.log({...req.body, hashedPass});
-        } catch (crerr) {
-            console.error("Couldn't create user:", username, "Reason:", crerr);
-        }
     } else {
-        res.status(400).send({
-            msg: "User Exists!"
-        });
+        res.status(403).send({
+            msg: "Username exists!",
+            _cecode: "TAKENLOL"
+        })
     }
-   c.end();
+   
+});
+
+app.post('/login', (req, res) => {
+    const {username,password} = req.body;
+    let userFound = findUser(username);
+    if(!userFound){
+        res.status(401).json({
+        msg: "User not found",
+        _cecode: "IMLOST"
+        });
+        return;
+    }
+    let authd = auth(username,password);
+    if(!userFound){
+        res.status(401).json({
+        msg: "Authentication Error!",
+        _cecode: "CANTENTERMATE"
+        });
+        return
+    }
+    req.session.user = {id:username}
+    res.status(200).json({
+        msg: "How did we get here?! Welcome!",
+        _cecode: "PARTY"
+    })
+});
+
+app.get("/", (req,res)=>{
+    console.log(req.session.user+" connected");
+    if(!req.session.user) return res.status(401).redirect("/login")
+    // finally serve
+      res.sendFile(path.join(__dirname, 'public', 'main.html'));
+});
+
+app.get("/login", (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.post("/logout", (req, res)=>{
+    req.session.destroy(err => {
+        if(err) return res.status(500).send("Error logging out!");
+        res.clearCookie('sid');
+        res.redirect('/login.html')
+    });
 });
 
 function salter(len) {
@@ -60,4 +107,4 @@ function salter(len) {
 
 app.listen(80);
 
-console.log("Server started on port 80.")
+console.log("Server started on port "+PORT);

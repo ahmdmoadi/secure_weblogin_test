@@ -63,8 +63,16 @@ registerBtn.addEventListener("click", async e=>{
 });
 
 // login form handeler
-
 loginForm.addEventListener("submit", e=>{
     e.preventDefault();
-    console.log(new FormData(e.target));
+    let fd = new FormData(loginForm);
+    let obj = Object.fromEntries(fd);
+    let str = JSON.stringify(obj);
+    fetch("http://localhost/login",{
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: str
+    });
 });
