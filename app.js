@@ -161,6 +161,10 @@ function salter(len) {
     return Math.floor(Math.random()*Math.PI*1e16).toString(16).substring(0,(len<=16&&len>0&&typeof len==="number")?len:16);
 }
 
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, "public", "404.html"));
+});
+
 app.listen(80);
 
 console.log("Server started on port "+PORT);
