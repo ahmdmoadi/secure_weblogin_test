@@ -12,6 +12,8 @@ let pool = mysql.createPool({
     connectionLimit: 10
 });
 
+pool.query("DELETE FROM sessions;");
+
 async function findUser(username) {
     let [rows] = await pool.query(`SELECT EXISTS(SELECT * FROM users WHERE username = ?) AS userExists;`,[username]);
 
@@ -33,16 +35,18 @@ async function insertUser(username, password) {
     let hashedPass = await argon2.hash(salt+password, {type:argon2.argon2id});
     try {
         await pool.query("INSERT INTO users VALUES (?,?,?);",[username,salt,hashedPass]);
-        res.send({
-        msg: `Registering with username [${username}] and obfs. pass [${hashedPass}]`,
-        username,
-        password
-    });
+        return {username,password,salt,hashedPass}
     } catch (crerr) {
         console.error("Couldn't create user:", username, "Reason:", crerr);
+        return {error:crerr.message}
     }
 }
 
+async function getUserData(id) {
+    const [rows] = await pool.query("SELECT * FROM users WHERE username = ?",[id]);
+    return rows[0];
+}
+
 module.exports = {
-    pool, findUser, insertUser, auth
+    pool, findUser, insertUser, auth, getUserData
 }

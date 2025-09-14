@@ -3,24 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <title>PUBLIC</title>
 </head>
 <body>
-    <p>Register</p>
-    <form id="register-form">
+    <p>Login</p><form id="login-form">
         <div class="form-ele">
-            <label for="username">Username:&nbsp;</label>
-            <input type="text" id="username">
+            <input type="hidden" name="redirect" value="">
         </div>
-        <div class="form-ele">
-            <label for="password">Password:&nbsp;</label>
-            <input type="password" id="password">
-        </div>
-        <div class="form-ele">
-            <button id="register">Register</button>
-        </div>
-    </form><p>Login</p><form id="login-form">
         <div class="form-ele">
             <label for="username_l">Username:&nbsp;</label>
             <input type="text" id="username_l" name="username">
@@ -33,6 +23,6 @@
             <button id="login">Login</button>
         </div>
     </form>
-    <script src="main.js"></script>
+    <script src="js/login.js"></script>
 </body>
 </html>

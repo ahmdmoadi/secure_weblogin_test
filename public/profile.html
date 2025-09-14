@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SWT | UNAME's user profile</title>
+</head>
+<body>
+    <h1 id="h1">Hi, UNAME!</h1>
+    <button>Logout</button>
+    <script>
+        let u = new URL(location.href);
+        let pl = u.pathname.split("/");
+        let usr = pl[pl.length-1];
+        h1.innerText=h1.innerText.replace(/UNAME/,usr);
+        document.title=document.title.replace(/UNAME/,usr);
+        let btn = document.querySelector("button");
+        btn.addEventListener("click",async e=>{
+            let r = fetch("//localhost/logout",{method:"POST"});
+            location.reload();
+        })
+    </script>
+</body>
+</html>

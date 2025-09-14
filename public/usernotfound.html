@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User "UNAME" not found!</title>
+</head>
+<body>
+    User "UNAME" doesn't exist.
+
+    <script>
+        let u = new URL(location.href);
+        let pl = u.pathname.split("/");
+        let usr = pl[pl.length-1];
+        document.body.innerText=document.body.innerText.replace(/UNAME/,usr);
+        document.title=document.title.replace(/UNAME/,usr);
+    </script>
+</body>
+</html>
