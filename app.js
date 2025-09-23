@@ -9,19 +9,10 @@ let {getClientIP, handleUsername} = require("./util");
 let {rateLimit} = require("express-rate-limit");
 require('./envr');
 
-// MIDDLEWARES
-app.use(require("cors")({origin: "*"}));
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+////////////
+// CONFIG //
+////////////
 
-// CONSTANTS
-const PORT = process.env.SERVER_PORT;
-
-// CONFIG
-// 1 for ngnix/heroku/vercel
-// false 4 now
-app.set('trust proxy', false);
 // login rate limiter to prevent bruteforce
 const loginLimiter = rateLimit({
     windowMs: 1000*60*15,
@@ -38,6 +29,14 @@ const sessionStore = new MySQLStore({
   database: process.env.DB_NAME,
   port: process.env.DB_PORT,
 });
+
+/////////////////
+// MIDDLEWARES //
+/////////////////
+app.use(require("cors")({origin: "*"}));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(session({
   key: 'sid',
   secret: process.env.SESSION_SECRET,
@@ -50,6 +49,12 @@ app.use(session({
     maxAge: 1000 * 60 * 60 // 1 hour
   }
 }));
+///////////////
+// CONSTANTS //
+///////////////
+const PORT = process.env.SERVER_PORT;
+
+
 // handle user registeration
 app.post("/register", async (req, res) => {
     console.log(req.body);
@@ -63,13 +68,12 @@ app.post("/register", async (req, res) => {
             error: "Invalid username: username containes blocked words/phrases."
         });
         insertUser(username, password);
-        res.status(200).send({
-            msg: "User Created Successfully.",
-            _cecode: "PIZZA"
+        res.status(200).json({
+            msg: "User Created Successfully."
         });
     } else {
-        res.status(409).send({
-            error: "Username already exists!"
+        res.status(409).json({
+            error: "Conflict"
         })
     }
    
