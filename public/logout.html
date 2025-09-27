@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logged out successfully.</title>
+</head>
+<body>
+    <h1>Logging out..</h1>
+    <h1 style="display: none;">Logged out successfully. Redirecting...</h1>
+
+    <script>
+        // Object.fromEntries(new URLSearchParams(location.search))
+        (async ()=>{
+            let [_,__] = document.querySelectorAll("h1");
+            let res = await fetch("//localhost/logout", {
+            method: "POST",
+            });
+            if (res.ok) {
+                let redirectPath = new URLSearchParams(location.search).get("redirect") || "/";
+                setTimeout(()=>{
+                    location.replace(redirectPath);
+                }, 1500);
+                __.style.display="block";
+                _.style.display="none";
+            } else {
+                _.style.display="block";
+                _.innerText="Error logging out!"
+                __.style.display="none";
+            }
+        })()
+        
+        
+    </script>
+</body>
+</html>
