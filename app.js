@@ -33,8 +33,29 @@ const sessionStore = new MySQLStore({
 /////////////////
 // MIDDLEWARES //
 /////////////////
-app.use(require("cors")({origin: "*"}));
+// Put this BEFORE express.static (chatgpt code)
+app.get("/:page.html", (req, res) => {
+  let page = req.params.page;
+
+  // Define mappings
+  const routes = {
+    main: "/",
+    profile: "/profile",
+    logout: "/logout",
+    register: "/register",
+    usernotfound: "/404",
+    "404": "/404"
+  };
+
+  if (routes[page]) {
+    return res.redirect(302, routes[page]);
+  }
+
+  // If no mapping, let express.static handle it
+  res.sendFile(path.join(__dirname, "public", `${page}.html`));
+});
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(require("cors")({origin: "*"}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -54,23 +75,51 @@ app.use(session({
 ///////////////
 const PORT = process.env.SERVER_PORT;
 
+////////////
+// ROUTES //
+////////////
+
+app.get("/status", (req,res)=>{
+    res.json({
+        status: "logged"+(!!req.session.user?" in":" out"),
+        loggedInUser: !!req.session.user?req.session.user.id:"N/A"
+    });
+})
+
+app.get("/register", (req, res) => {
+    if(req.session.user) {
+        let path = req.query.redirect || "/";
+        console.log(req.query,path);
+        return res.redirect(path);
+    }
+    res.sendFile(path.join(__dirname, "public","register.html"))
+});
 
 // handle user registeration
 app.post("/register", async (req, res) => {
+    if(req.session.user){
+        res.status(409).json({
+            error: "Already Logged In"
+        });
+    }
     console.log(req.body);
     let {username, password} = req.body;
     
     let userFound = await findUser(username);
 
     if(!userFound) {
-        let valid = handleUsername(username);
-        if(!valid) return res.status(422).json({
+        let isIllegal = handleUsername(username);
+        if(isIllegal) {
+            console.log("illegal creds", isIllegal);
+            return res.status(422).json({
             error: "Invalid username: username containes blocked words/phrases."
-        });
+            })
+        };
         insertUser(username, password);
-        res.status(200).json({
-            msg: "User Created Successfully."
-        });
+        req.session.user = {
+            id: username
+        }
+        res.redirect("/")
     } else {
         res.status(409).json({
             error: "Conflict"
@@ -100,7 +149,7 @@ app.post('/login', loginLimiter,async (req, res) => {
     })}
     let userFound = findUser(username);
     if(!userFound){
-        console.log("usr doesnt exist");
+        console.error("usr doesnt exist");
         return res.status(401).json({
         error: "User not found"
         });
@@ -108,10 +157,9 @@ app.post('/login', loginLimiter,async (req, res) => {
     console.log(`hmm, seems like ${username} is here!`);
     let authd = await auth(username,password);
     if(!authd){
-        console.log("oof, guess not! shoo!");
+        console.error("oof, guess not! shoo!");
         return res.status(401).json({
-        msg: "Authentication Error!",
-        _cecode: "CANTENTERMATE"
+        msg: "Authentication Error!"
         });
     }
     req.session.user = {id:username}
@@ -133,6 +181,8 @@ app.get("/profile", (req, res) => {
     res.status(200).sendFile(path.join(__dirname, "public", "profile.html"))
 });
 
+app.post("/info",new Function());
+
 app.get('/user/:userid', async (req, res) => {
   const id = req.params.userid;
   if(await findUser(id)) {
@@ -143,30 +193,36 @@ app.get('/user/:userid', async (req, res) => {
   }
 });
 
-
 app.get("/", (req,res)=>{
     // console.log(req.session.user+" connected");
     // if(!req.session.user) return res.status(401).redirect("/login");
     // finally serve
-    //   res.sendFile(path.join(__dirname, 'public', 'main.html'));
-    res.status(200).json({ip: getClientIP(req),loggedIn:!!req.session.user});
+    res.sendFile(path.join(__dirname, 'public', 'main.html'));
+    // res.status(200).json({ip: getClientIP(req),loggedIn:!!req.session.user});
 });
 
 
 app.post("/logout", (req, res)=>{
     req.session.destroy(err => {
-        if(err) return res.status(500).send("Error logging out!");
+        if(err) {
+            console.error("Client logout failure!");
+            return res.status(500).json({
+                error: "couldn't logout!"
+            })
+        };
         res.clearCookie('sid');
-        console.log("baseUrl",req.baseUrl??null)
+        // console.log("baseUrl",req.baseUrl??null);
     });
 });
-
-function salter(len) {
-    return Math.floor(Math.random()*Math.PI*1e16).toString(16).substring(0,(len<=16&&len>0&&typeof len==="number")?len:16);
-}
+app.get("/logout", (req, res)=>{
+    if(!req.session.user){
+        res.redirect("/");
+    }
+    res.sendFile(path.join(__dirname, "public", "logout.html"));
+});
 
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, "public", "404.html"));
+    res.sendFile(path.join(__dirname, "public", "404.html"))
 });
 
 app.listen(80);

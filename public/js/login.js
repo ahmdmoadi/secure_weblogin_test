@@ -1,9 +1,3 @@
-/**@type {HTMLInputElement} */
-let loginUser = document.querySelector("#username_l");
-/**@type {HTMLInputElement} */
-let loginPass = document.querySelector("#password_l");
-/**@type {HTMLButtonElement} */
-let loginBtn = document.querySelector("#login");
 /**@type {HTMLFormElement} */
 let loginForm = document.getElementById("login-form");
 
